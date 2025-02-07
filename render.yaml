@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: archibati
+    env: node
+    region: frankfurt
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        value: postgresql://archi_yi52_user:ajIJ2wYAbnTijod9nAYXpYUYwoMENL7m@dpg-cuj6qc5umphs73cqule0-a.oregon-postgres.render.com/archi_yi52
+      - key: PGHOST
+        value: dpg-cuj6qc5umphs73cqule0-a.oregon-postgres.render.com
+      - key: PGPORT
+        value: 5432
+      - key: PGUSER
+        value: archi_yi52_user
+      - key: PGPASSWORD
+        value: ajIJ2wYAbnTijod9nAYXpYUYwoMENL7m
+      - key: PGDATABASE
+        value: archi_yi52
+    buildFilter:
+      paths:
+        - client/**
+        - server/**
+        - shared/**
+        - package.json
+        - vite.config.ts
+    autoDeploy: true
