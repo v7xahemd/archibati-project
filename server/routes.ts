@@ -12,7 +12,7 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/track", async (req, res) => {
     const result = clientLoginSchema.safeParse(req.body);
     if (!result.success) {
-      return res.status(400).json({ error: "Invalid input" });
+      return res.status(400).json({ error: "Données invalides" });
     }
 
     const project = await storage.getProjectByClientAndCode(
@@ -21,7 +21,7 @@ export function registerRoutes(app: Express): Server {
     );
 
     if (!project) {
-      return res.status(404).json({ error: "Project not found" });
+      return res.status(404).json({ error: "Projet non trouvé" });
     }
 
     const progress = await storage.getProjectProgress(project.id);
@@ -44,7 +44,7 @@ export function registerRoutes(app: Express): Server {
 
     const result = insertProjectSchema.safeParse(req.body);
     if (!result.success) {
-      return res.status(400).json({ error: "Invalid input" });
+      return res.status(400).json({ error: "Données invalides" });
     }
 
     const project = await storage.createProject(result.data);
@@ -62,7 +62,7 @@ export function registerRoutes(app: Express): Server {
     });
 
     if (!result.success) {
-      return res.status(400).json({ error: "Invalid input" });
+      return res.status(400).json({ error: "Données invalides" });
     }
 
     const progress = await storage.addProjectProgress(result.data);
@@ -76,7 +76,7 @@ export function registerRoutes(app: Express): Server {
 
     const result = z.object({ completed: z.boolean() }).safeParse(req.body);
     if (!result.success) {
-      return res.status(400).json({ error: "Invalid input" });
+      return res.status(400).json({ error: "Données invalides" });
     }
 
     const progress = await storage.updateProgressStatus(
@@ -84,6 +84,15 @@ export function registerRoutes(app: Express): Server {
       result.data.completed
     );
     res.json(progress);
+  });
+
+  app.delete("/api/progress/:id", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user.isAdmin) {
+      return res.sendStatus(403);
+    }
+
+    await storage.deleteProgress(parseInt(req.params.id));
+    res.sendStatus(204);
   });
 
   const httpServer = createServer(app);

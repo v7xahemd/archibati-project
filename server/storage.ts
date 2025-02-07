@@ -18,6 +18,7 @@ export interface IStorage {
   getProjectProgress(projectId: number): Promise<ProgressStep[]>;
   addProjectProgress(progress: Omit<ProgressStep, "id" | "createdAt">): Promise<ProgressStep>;
   updateProgressStatus(id: number, completed: boolean): Promise<ProgressStep | undefined>;
+  deleteProgress(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -34,7 +35,7 @@ export class DatabaseStorage implements IStorage {
       if (!user) {
         this.createUser({
           username: "cybersecurite@archibati.fr",
-          password: "ahmedadmin3553040#",
+          password: "ahmedadmin3553040",
           isAdmin: true,
         });
       }
@@ -124,6 +125,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(progressSteps.id, id))
       .returning();
     return progress;
+  }
+
+  async deleteProgress(id: number): Promise<void> {
+    await db.delete(progressSteps).where(eq(progressSteps.id, id));
   }
 }
 
