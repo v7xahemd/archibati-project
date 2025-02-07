@@ -56,10 +56,13 @@ export function registerRoutes(app: Express): Server {
       return res.sendStatus(403);
     }
 
-    const result = insertProgressSchema.safeParse({
+    const progressData = {
       ...req.body,
       projectId: parseInt(req.params.id),
-    });
+      completed: false,
+    };
+
+    const result = insertProgressSchema.omit({ id: true, createdAt: true }).safeParse(progressData);
 
     if (!result.success) {
       return res.status(400).json({ error: "Données invalides" });
