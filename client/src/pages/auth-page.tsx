@@ -23,12 +23,12 @@ export default function AuthPage() {
           <div className="mb-8">
             <h1 className="mb-2 text-3xl font-bold">Bienvenue sur ARCHI BATI</h1>
             <p className="text-muted-foreground">
-              Connectez-vous pour gérer les projets de construction et suivre l'avancement des clients.
+              Connectez-vous pour gérer les projets de construction et suivre l'avancement des chantiers.
             </p>
           </div>
           <Card className="w-full max-w-md">
             <CardHeader>
-              <CardTitle>Connexion au compte</CardTitle>
+              <CardTitle>Connexion</CardTitle>
             </CardHeader>
             <CardContent>
               <LoginForm />
@@ -40,7 +40,7 @@ export default function AuthPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/0 rounded-lg" />
             <div className="relative">
               <h2 className="text-2xl font-bold text-white mb-4">
-                Gestion de Projets de Construction
+                Gestion de Chantiers
               </h2>
               <ul className="space-y-4 text-white/80">
                 <li>Suivez l'avancement des travaux en temps réel</li>
@@ -73,7 +73,7 @@ function LoginForm() {
         className="space-y-4"
       >
         <Input
-          placeholder="Nom d'utilisateur"
+          placeholder="Email"
           {...form.register("username")}
           disabled={loginMutation.isPending}
         />

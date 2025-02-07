@@ -40,7 +40,7 @@ export default function ProjectProgress({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-      toast({ title: "Progress updated" });
+      toast({ title: "Progression mise à jour" });
     },
   });
 
@@ -64,20 +64,20 @@ export default function ProjectProgress({
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold">{project.clientName}'s Project</h2>
-          <p className="text-muted-foreground">Track construction progress</p>
+          <h2 className="text-2xl font-bold">Projet de {project.clientName}</h2>
+          <p className="text-muted-foreground">Suivi de l'avancement du chantier</p>
         </div>
         {isAdmin && (
           <Dialog>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Progress
+                Ajouter une Étape
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add Progress Step</DialogTitle>
+                <DialogTitle>Ajouter une Étape</DialogTitle>
               </DialogHeader>
               <NewProgressForm onSubmit={(data) => addProgressMutation.mutate(data)} />
             </DialogContent>
@@ -138,10 +138,10 @@ function NewProgressForm({ onSubmit }: { onSubmit: (data: unknown) => void }) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <Input placeholder="Title" {...form.register("title")} />
+        <Input placeholder="Titre" {...form.register("title")} />
         <Input placeholder="Description" {...form.register("description")} />
         <Button type="submit" className="w-full">
-          Add Progress
+          Ajouter l'Étape
         </Button>
       </form>
     </Form>

@@ -34,7 +34,7 @@ export default function ClientTracking() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: "Erreur",
         description: error.message,
         variant: "destructive",
       });
@@ -45,7 +45,7 @@ export default function ClientTracking() {
     <div className="container mx-auto py-8">
       <Card className="max-w-md mx-auto">
         <CardHeader>
-          <CardTitle>Track Your Project</CardTitle>
+          <CardTitle>Suivre Votre Projet</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -54,12 +54,12 @@ export default function ClientTracking() {
               className="space-y-4"
             >
               <Input
-                placeholder="Client Name"
+                placeholder="Nom du Client"
                 {...form.register("clientName")}
                 disabled={trackMutation.isPending}
               />
               <Input
-                placeholder="Secret Code"
+                placeholder="Code Secret"
                 type="password"
                 {...form.register("secretCode")}
                 disabled={trackMutation.isPending}
@@ -72,7 +72,7 @@ export default function ClientTracking() {
                 {trackMutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                View Progress
+                Voir la Progression
               </Button>
             </form>
           </Form>

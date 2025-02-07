@@ -21,14 +21,14 @@ export default function Navbar() {
           </Link>
           <div className="hidden md:flex space-x-4">
             <Link href="/track">
-              <Button variant="link">Track Project</Button>
+              <Button variant="link">Suivi de Projet</Button>
             </Link>
             <a
               href="https://archibati.fr"
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Button variant="link">Visit Website</Button>
+              <Button variant="link">Visiter le Site Web</Button>
             </a>
           </div>
         </div>
@@ -43,19 +43,19 @@ export default function Navbar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <Link href="/admin">
-                  <DropdownMenuItem>Dashboard</DropdownMenuItem>
+                  <DropdownMenuItem>Tableau de Bord</DropdownMenuItem>
                 </Link>
                 <DropdownMenuItem
                   onClick={() => logoutMutation.mutate()}
                   className="text-red-500"
                 >
-                  Logout
+                  Déconnexion
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <Link href="/auth">
-              <Button>Login</Button>
+              <Button>Connexion</Button>
             </Link>
           )}
         </div>
