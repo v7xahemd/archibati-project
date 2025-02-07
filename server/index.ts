@@ -6,10 +6,18 @@ import compression from "compression";
 
 const app = express();
 
-// Security middlewares with more permissive settings
+// Configuration de sécurité plus permissive pour le développement
 app.use(helmet({
-  contentSecurityPolicy: false, // Désactiver CSP pour le développement
-  frameguard: false, // Permettre l'incorporation dans des iframes
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'", "*"],
+      connectSrc: ["'self'", "*"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:", "*"],
+      frameSrc: ["'self'", "*"],
+    },
+  },
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
@@ -18,20 +26,7 @@ app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Redirection pour Firefox
-app.use((req, res, next) => {
-  const userAgent = req.headers['user-agent'];
-  const isFirefox = userAgent && userAgent.includes('Firefox');
-  const isIframe = req.headers['sec-fetch-dest'] === 'iframe';
-
-  if (isFirefox && isIframe) {
-    res.redirect(302, `https://${req.headers.host}${req.url}`);
-    return;
-  }
-  next();
-});
-
-// CORS configuration plus permissive
+// Configuration CORS simple
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
@@ -89,7 +84,7 @@ app.use((req, res, next) => {
   }
 
   const PORT = process.env.PORT || 5000;
-  server.listen(PORT, "0.0.0.0", () => {
+  server.listen(PORT, () => {
     log(`Server running in ${app.get("env")} mode on port ${PORT}`);
   });
 })();
