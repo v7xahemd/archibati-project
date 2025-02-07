@@ -39,6 +39,23 @@ export default function AdminDashboard() {
     queryKey: ["/api/projects"],
   });
 
+  const { data: selectedProjectProgress = [], isLoading: progressLoading } = useQuery({
+    queryKey: ["/api/projects", selectedProject, "progress"],
+    enabled: selectedProject !== null,
+    queryFn: async () => {
+      const res = await fetch(`/api/track`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientName: projects?.find((p: any) => p.id === selectedProject)?.clientName,
+          secretCode: projects?.find((p: any) => p.id === selectedProject)?.secretCode,
+        }),
+      });
+      const data = await res.json();
+      return data.progress || [];
+    },
+  });
+
   const createProjectMutation = useMutation({
     mutationFn: async (data: unknown) => {
       const res = await apiRequest("POST", "/api/projects", data);
@@ -181,11 +198,17 @@ export default function AdminDashboard() {
             <DialogHeader>
               <DialogTitle>Progression du Projet</DialogTitle>
             </DialogHeader>
-            <ProjectProgress
-              project={projects.find((p: any) => p.id === selectedProject)}
-              progress={[]}
-              isAdmin
-            />
+            {progressLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <ProjectProgress
+                project={projects?.find((p: any) => p.id === selectedProject)}
+                progress={selectedProjectProgress}
+                isAdmin
+              />
+            )}
           </DialogContent>
         </Dialog>
       )}
