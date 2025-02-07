@@ -27,21 +27,30 @@ export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    this.sessionStore = new PostgresSessionStore({
+    // Configuration du store de session avec SSL en production
+    const sessionConfig = {
       pool,
       createTableIfMissing: true,
-    });
+      ssl: process.env.NODE_ENV === 'production'
+    };
 
-    // Create default admin on first run
-    this.getUserByUsername("cybersecurite@archibati.fr").then(user => {
-      if (!user) {
-        this.createUser({
-          username: "cybersecurite@archibati.fr",
-          password: "ahmedadmin3553040",
-          isAdmin: true,
-        });
-      }
-    });
+    this.sessionStore = new PostgresSessionStore(sessionConfig);
+
+    // Création de l'admin par défaut avec gestion d'erreur
+    this.getUserByUsername("cybersecurite@archibati.fr")
+      .then(user => {
+        if (!user) {
+          console.log("Creating default admin user...");
+          return this.createUser({
+            username: "cybersecurite@archibati.fr",
+            password: "ahmedadmin3553040",
+            isAdmin: true,
+          });
+        }
+        return user;
+      })
+      .then(() => console.log("Admin user check completed"))
+      .catch(err => console.error("Error during admin user setup:", err));
   }
 
   async getUser(id: number): Promise<User | undefined> {
