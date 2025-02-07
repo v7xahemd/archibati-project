@@ -6,18 +6,45 @@ import compression from "compression";
 
 const app = express();
 
-// Security middlewares
-app.use(helmet());
-app.use(compression());
+// Security middlewares with correct CORS and CSP settings for Replit
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", process.env.REPL_SLUG ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : '*'],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      frameSrc: ["'self'", "https://*.replit.dev", "https://*.repl.co"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
 
+app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// CORS configuration for production
+// Updated CORS configuration for Replit
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || '*');
+  const allowedOrigins = [
+    'https://replit.com',
+    'https://*.replit.dev',
+    'https://*.repl.co',
+    process.env.CORS_ORIGIN,
+  ].filter(Boolean);
+
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.some(allowed => 
+    origin === allowed || (allowed.includes('*') && origin.endsWith(allowed.slice(1)))
+  )) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   next();
 });
 
