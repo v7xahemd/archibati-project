@@ -1,6 +1,6 @@
 import { users, projects, progressSteps, type User, type InsertUser, type Project, type ProgressStep } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -42,16 +42,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    const rows = await db.select().from(users).where(eq(users.id, id));
+    return rows[0];
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db
+    const rows = await db
       .select()
       .from(users)
       .where(eq(users.username, username.toLowerCase()));
-    return user;
+    return rows[0];
   }
 
   async createUser(insertUser: InsertUser & { isAdmin?: boolean }): Promise<User> {
@@ -74,8 +74,8 @@ export class DatabaseStorage implements IStorage {
     const [newProject] = await db
       .insert(projects)
       .values({
-        ...project,
         clientName: project.clientName.toLowerCase(),
+        secretCode: project.secretCode,
       })
       .returning();
     return newProject;
@@ -85,12 +85,16 @@ export class DatabaseStorage implements IStorage {
     clientName: string,
     secretCode: string
   ): Promise<Project | undefined> {
-    const [project] = await db
+    const rows = await db
       .select()
       .from(projects)
-      .where(eq(projects.clientName, clientName.toLowerCase()))
-      .where(eq(projects.secretCode, secretCode));
-    return project;
+      .where(
+        and(
+          eq(projects.clientName, clientName.toLowerCase()),
+          eq(projects.secretCode, secretCode)
+        )
+      );
+    return rows[0];
   }
 
   async getProjectProgress(projectId: number): Promise<ProgressStep[]> {
