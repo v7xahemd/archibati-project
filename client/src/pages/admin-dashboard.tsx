@@ -59,7 +59,7 @@ export default function AdminDashboard() {
 
   const createAdminMutation = useMutation({
     mutationFn: async (data: unknown) => {
-      const res = await apiRequest("POST", "/api/register", { ...data, isAdmin: true });
+      const res = await apiRequest("POST", "/api/register", data);
       return res.json();
     },
     onSuccess: () => {
@@ -74,9 +74,7 @@ export default function AdminDashboard() {
     },
   });
 
-  const isLoading = projectsLoading; // Combined loading state
-
-  if (isLoading) {
+  if (projectsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -120,7 +118,7 @@ export default function AdminDashboard() {
               >
                 <CardHeader>
                   <CardTitle>{project.clientName}</CardTitle>
-                  <CardDescription>Code: {project.secretCode}</CardDescription>
+                  <CardDescription>Code secret: {project.secretCode}</CardDescription>
                 </CardHeader>
               </Card>
             ))}
@@ -194,6 +192,7 @@ function NewAdminForm({ onSubmit }: { onSubmit: (data: unknown) => void }) {
     defaultValues: {
       username: "",
       password: "",
+      isAdmin: true,
     },
   });
 
