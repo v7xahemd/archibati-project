@@ -1,0 +1,91 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { setupAuth } from "./auth";
+import { storage } from "./storage";
+import { insertProjectSchema, insertProgressSchema, clientLoginSchema } from "@shared/schema";
+import { z } from "zod";
+
+export function registerRoutes(app: Express): Server {
+  setupAuth(app);
+
+  // Client routes
+  app.post("/api/track", async (req, res) => {
+    const result = clientLoginSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: "Invalid input" });
+    }
+
+    const project = await storage.getProjectByClientAndCode(
+      result.data.clientName,
+      result.data.secretCode
+    );
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    const progress = await storage.getProjectProgress(project.id);
+    res.json({ project, progress });
+  });
+
+  // Admin routes
+  app.get("/api/projects", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user.isAdmin) {
+      return res.sendStatus(403);
+    }
+    const projects = await storage.getAllProjects();
+    res.json(projects);
+  });
+
+  app.post("/api/projects", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user.isAdmin) {
+      return res.sendStatus(403);
+    }
+
+    const result = insertProjectSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: "Invalid input" });
+    }
+
+    const project = await storage.createProject(result.data);
+    res.status(201).json(project);
+  });
+
+  app.post("/api/projects/:id/progress", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user.isAdmin) {
+      return res.sendStatus(403);
+    }
+
+    const result = insertProgressSchema.safeParse({
+      ...req.body,
+      projectId: parseInt(req.params.id),
+    });
+
+    if (!result.success) {
+      return res.status(400).json({ error: "Invalid input" });
+    }
+
+    const progress = await storage.addProjectProgress(result.data);
+    res.status(201).json(progress);
+  });
+
+  app.patch("/api/progress/:id", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user.isAdmin) {
+      return res.sendStatus(403);
+    }
+
+    const result = z.object({ completed: z.boolean() }).safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: "Invalid input" });
+    }
+
+    const progress = await storage.updateProgressStatus(
+      parseInt(req.params.id),
+      result.data.completed
+    );
+    res.json(progress);
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
