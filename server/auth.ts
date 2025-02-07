@@ -22,10 +22,11 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
+  // Pour le premier accès avec le mot de passe non haché
   if (!stored.includes(".")) {
-    // Pour la première connexion avec le mot de passe en clair
     return supplied === stored;
   }
+
   const [hashed, salt] = stored.split(".");
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
