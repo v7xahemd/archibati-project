@@ -69,19 +69,33 @@ export function registerRoutes(app: Express): Server {
     res.status(201).json(progress);
   });
 
+  app.delete("/api/projects/:id", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user.isAdmin) {
+      return res.sendStatus(403);
+    }
+
+    await storage.deleteProject(parseInt(req.params.id));
+    res.sendStatus(204);
+  });
+
   app.patch("/api/progress/:id", async (req, res) => {
     if (!req.isAuthenticated() || !req.user.isAdmin) {
       return res.sendStatus(403);
     }
 
-    const result = z.object({ completed: z.boolean() }).safeParse(req.body);
+    const result = z.object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+      completed: z.boolean().optional(),
+    }).safeParse(req.body);
+
     if (!result.success) {
       return res.status(400).json({ error: "Données invalides" });
     }
 
-    const progress = await storage.updateProgressStatus(
+    const progress = await storage.updateProgress(
       parseInt(req.params.id),
-      result.data.completed
+      result.data
     );
     res.json(progress);
   });

@@ -19,6 +19,8 @@ export interface IStorage {
   addProjectProgress(progress: Omit<ProgressStep, "id" | "createdAt">): Promise<ProgressStep>;
   updateProgressStatus(id: number, completed: boolean): Promise<ProgressStep | undefined>;
   deleteProgress(id: number): Promise<void>;
+  deleteProject(id: number): Promise<void>;
+  updateProgress(id: number, data: Partial<Omit<ProgressStep, "id" | "createdAt">>): Promise<ProgressStep | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -129,6 +131,25 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProgress(id: number): Promise<void> {
     await db.delete(progressSteps).where(eq(progressSteps.id, id));
+  }
+
+  async deleteProject(id: number): Promise<void> {
+    // D'abord supprimer toutes les étapes associées au projet
+    await db.delete(progressSteps).where(eq(progressSteps.projectId, id));
+    // Ensuite supprimer le projet
+    await db.delete(projects).where(eq(projects.id, id));
+  }
+
+  async updateProgress(
+    id: number,
+    data: Partial<Omit<ProgressStep, "id" | "createdAt">>
+  ): Promise<ProgressStep | undefined> {
+    const [progress] = await db
+      .update(progressSteps)
+      .set(data)
+      .where(eq(progressSteps.id, id))
+      .returning();
+    return progress;
   }
 }
 

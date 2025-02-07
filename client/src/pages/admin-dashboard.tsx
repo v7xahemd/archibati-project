@@ -16,7 +16,7 @@ import { insertProjectSchema, insertUserSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import ProjectProgress from "@/components/project-progress";
-import { Loader2, Plus, Users } from "lucide-react";
+import { Loader2, Plus, Users, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -74,6 +74,23 @@ export default function AdminDashboard() {
     },
   });
 
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/projects/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      toast({ title: "Projet supprimé avec succès" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Échec de la suppression du projet",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   if (projectsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
@@ -114,11 +131,23 @@ export default function AdminDashboard() {
               <Card
                 key={project.id}
                 className="cursor-pointer transition-colors hover:bg-muted/50"
-                onClick={() => setSelectedProject(project.id)}
               >
-                <CardHeader>
-                  <CardTitle>{project.clientName}</CardTitle>
-                  <CardDescription>Code secret: {project.secretCode}</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div onClick={() => setSelectedProject(project.id)}>
+                    <CardTitle>{project.clientName}</CardTitle>
+                    <CardDescription>Code secret: {project.secretCode}</CardDescription>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteProjectMutation.mutate(project.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </CardHeader>
               </Card>
             ))}
@@ -200,10 +229,10 @@ function NewAdminForm({ onSubmit }: { onSubmit: (data: unknown) => void }) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <Input placeholder="Nom d'utilisateur" {...form.register("username")} />
-        <Input 
-          type="password" 
-          placeholder="Mot de passe" 
-          {...form.register("password")} 
+        <Input
+          type="password"
+          placeholder="Mot de passe"
+          {...form.register("password")}
         />
         <Button type="submit" className="w-full">
           Créer l'Administrateur

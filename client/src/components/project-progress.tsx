@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Loader2, Plus, Trash2 } from "lucide-react";
+import { Check, Loader2, Plus, Trash2, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,6 +28,7 @@ export default function ProjectProgress({
   isAdmin?: boolean;
 }) {
   const { toast } = useToast();
+  const [editingProgress, setEditingProgress] = useState<any>(null);
 
   const addProgressMutation = useMutation({
     mutationFn: async (data: unknown) => {
@@ -47,17 +48,18 @@ export default function ProjectProgress({
   const updateProgressMutation = useMutation({
     mutationFn: async ({
       id,
-      completed,
+      data,
     }: {
       id: number;
-      completed: boolean;
+      data: unknown;
     }) => {
-      const res = await apiRequest("PATCH", `/api/progress/${id}`, { completed });
+      const res = await apiRequest("PATCH", `/api/progress/${id}`, data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-      toast({ title: "État de l'étape mis à jour" });
+      toast({ title: "Étape mise à jour avec succès" });
+      setEditingProgress(null);
     },
   });
 
@@ -113,7 +115,7 @@ export default function ProjectProgress({
                 isAdmin &&
                 updateProgressMutation.mutate({
                   id: step.id,
-                  completed: !step.completed,
+                  data: { completed: !step.completed },
                 })
               }
             >
@@ -124,23 +126,44 @@ export default function ProjectProgress({
               )}
             </div>
             <div className="flex-1">
-              <h3 className="font-medium">{step.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                {step.description}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {new Date(step.createdAt).toLocaleDateString('fr-FR')}
-              </p>
+              {editingProgress?.id === step.id ? (
+                <EditProgressForm
+                  defaultValues={step}
+                  onSubmit={(data) =>
+                    updateProgressMutation.mutate({ id: step.id, data })
+                  }
+                  onCancel={() => setEditingProgress(null)}
+                />
+              ) : (
+                <>
+                  <h3 className="font-medium">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {step.description}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {new Date(step.createdAt).toLocaleDateString('fr-FR')}
+                  </p>
+                </>
+              )}
             </div>
-            {isAdmin && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => deleteProgressMutation.mutate(step.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+            {isAdmin && !editingProgress && (
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setEditingProgress(step)}
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => deleteProgressMutation.mutate(step.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             )}
           </div>
         ))}
@@ -173,6 +196,43 @@ function NewProgressForm({ onSubmit }: { onSubmit: (data: unknown) => void }) {
         <Button type="submit" className="w-full">
           Ajouter l'Étape
         </Button>
+      </form>
+    </Form>
+  );
+}
+
+function EditProgressForm({
+  defaultValues,
+  onSubmit,
+  onCancel,
+}: {
+  defaultValues: any;
+  onSubmit: (data: unknown) => void;
+  onCancel: () => void;
+}) {
+  const form = useForm({
+    resolver: zodResolver(
+      insertProgressSchema.omit({ projectId: true, completed: true })
+    ),
+    defaultValues: {
+      title: defaultValues.title,
+      description: defaultValues.description,
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <Input {...form.register("title")} />
+        <Input {...form.register("description")} />
+        <div className="flex gap-2">
+          <Button type="submit" className="flex-1">
+            Sauvegarder
+          </Button>
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Annuler
+          </Button>
+        </div>
       </form>
     </Form>
   );
